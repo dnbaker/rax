@@ -38,6 +38,35 @@ public:
         clear();
     }
 
+    size_t size() const {return core_.numele;}
+
+    static void init_stack(raxStack &rs) {
+        rs.stack = rs.static_items;
+        rs.items = 0;
+        rs.maxitems = RAX_STACK_STATIC_ITEMS;
+        rs.oom = 0;
+    }
+
+    struct iterator: raxIterator {
+        bool operator==(int o) {return this->flags & RAX_ITER_EOF;}
+        bool operator!=(int o) {return !(this->flags & RAX_ITER_EOF);}
+        iterator(rax &rt) {
+            this->flags = RAX_ITER_EOF;
+            this->rt = &rt;
+            this->key_len = 0;
+            this->key = this->key_static_string;
+            this->key_max = RAX_ITER_STATIC_LEN;
+            this->data = nullptr;
+            this->node_cb = nullptr;
+            init_stack(this->stack);
+        }
+        iterator &operator++() {
+            int ret = raxNext(*this);
+            if(!ret && errno == ENOMEM) throw std::bad_alloc();
+        }
+    };
+    iterator begin() {return iterator(core_);}
+    int end() const {return 0;}
 //Helper functions:
 private:
     static constexpr raxNode **raxNodeLastChildPtr(raxNode *n) {
@@ -64,9 +93,21 @@ private:
         memcpy(&data,ndata,sizeof(data));
         return data;
     }
+    int raxNext(raxIterator &it) {
+        if (!raxIteratorNextStep(&it,0)) {
+            errno = ENOMEM;
+            return 0;
+        }
+        if (it.flags & RAX_ITER_EOF) {
+            errno = 0;
+            return 0;
+        }
+        return 1;
+    }
+
 };
 
-}
+} // redis
 
 namespace rs = redis;
 
