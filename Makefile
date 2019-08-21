@@ -22,7 +22,7 @@ rax-oom-test: rax-oom-test.o rax.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(DEBUG)
 
 raxpp: raxpp.cpp raxpp.h rax.o
-	$(CXX) -std=c++14 -o $@ $< rax.o -O3
+	$(CXX) -std=c++14 -o $@ $< rax.o -O3 -fsanitize=undefined -fsanitize=address
 
 .c.o:
 	$(CC) -c $(CFLAGS) $(DEBUG) $<
