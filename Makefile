@@ -2,6 +2,8 @@ DEBUG?= -g -ggdb
 CFLAGS?= -O2 -Wall -W -std=c99
 LDFLAGS= -lm
 
+CXX?=g++-9
+
 # Uncomment the following two lines for coverage testing
 #
 # CFLAGS+=-fprofile-arcs -ftest-coverage
@@ -18,6 +20,9 @@ rax-test: rax-test.o rax.o rc4rand.o crc16.o
 
 rax-oom-test: rax-oom-test.o rax.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(DEBUG)
+
+raxpp: raxpp.cpp raxpp.h rax.o
+	$(CXX) -std=c++14 -o $@ $< rax.o -O3
 
 .c.o:
 	$(CC) -c $(CFLAGS) $(DEBUG) $<

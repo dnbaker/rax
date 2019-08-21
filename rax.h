@@ -31,7 +31,14 @@
 #ifndef RAX_H
 #define RAX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Representation of a radix tree as implemented in this file, that contains
  * the strings "foo", "foobar" and "footer" after the insertion of each
@@ -139,7 +146,9 @@ typedef struct rax {
 /* Stack data structure used by raxLowWalk() in order to, optionally, return
  * a list of parent nodes to the caller. The nodes do not have a "parent"
  * field for space concerns, so we use the auxiliary stack when needed. */
-#define RAX_STACK_STATIC_ITEMS 32
+#ifndef RAX_STACK_STATIC_ITEMS
+#define RAX_STACK_STATIC_ITEMS 32 /* this can be tuned by passing -DRAX_STACK_STATIC_ITEMS */
+#endif
 typedef struct raxStack {
     void **stack; /* Points to static_items or an heap allocated array. */
     size_t items, maxitems; /* Number of items contained and total space. */
@@ -190,6 +199,7 @@ extern void *raxNotFound;
 
 /* Exported API. */
 rax *raxNew(void);
+raxNode *raxNewNode(size_t children, int datafield);
 int raxInsert(rax *rax, unsigned char *s, size_t len, void *data, void **old);
 int raxTryInsert(rax *rax, unsigned char *s, size_t len, void *data, void **old);
 int raxRemove(rax *rax, unsigned char *s, size_t len, void **old);
@@ -208,9 +218,13 @@ void raxShow(rax *rax);
 uint64_t raxSize(rax *rax);
 unsigned long raxTouch(raxNode *n);
 void raxSetDebugMsg(int onoff);
+void raxRecursiveFree(rax *rax, raxNode *n, void (*free_callback)(void*));
 
 /* Internal API. May be used by the node callback in order to access rax nodes
  * in a low level way, so this function is exported as well. */
 void raxSetData(raxNode *n, void *data);
+#ifdef __cplusplus
+} //* extern "C" */
+#endif
 
 #endif
